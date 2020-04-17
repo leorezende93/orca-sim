@@ -88,9 +88,9 @@ private:
 
 	///@{
     /// internal registers between the pipeline stages.
-	float  _op1[SIMD_SIZE], _op2[SIMD_SIZE];  ///< data 'register' pf the 1st pipeline stage, i.e. the operands of the MAC units.
-	float  _reg_mul[SIMD_SIZE];  ///< data 'register' between the 2nd and the 3rd pipeline stages. The result of the multiplication.
-	float  _reg_mac[SIMD_SIZE];  ///< data 'register' with the output of the MAC.
+	int  _op1[SIMD_SIZE], _op2[SIMD_SIZE];  ///< data 'register' pf the 1st pipeline stage, i.e. the operands of the MAC units.
+	int  _reg_mul[SIMD_SIZE];  ///< data 'register' between the 2nd and the 3rd pipeline stages. The result of the multiplication.
+	int  _reg_mac[SIMD_SIZE];  ///< data 'register' with the output of the MAC.
 	///@}
 
 	///@{

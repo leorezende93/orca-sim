@@ -82,7 +82,7 @@ void TDmaMult::Reset(){
 	_dma_state = DmaState::WAIT_CONFIG_STALL;
 
 	// get the pointer to the base memory position where the MACs store their final values 
-	float *ptr = (float *)_mem0->GetMap(_base_mac_out_addr);
+	int *ptr = (int *)_mem0->GetMap(_base_mac_out_addr);
 	for (i=0;i<SIMD_SIZE;i++){
 		*ptr = 0;
 		ptr++;
@@ -120,7 +120,7 @@ void TDmaMult::DoAcc(){
 			} 
 			}break;
 		case DmaState::COPY_TO_CPU:{
-			float *ptr = (float *)_mem0->GetMap(_base_mac_out_addr);
+			int *ptr = (int *)_mem0->GetMap(_base_mac_out_addr);
 			for (i=0;i<SIMD_SIZE;i++){
 				//printf ("MAC[%d]: %f - 0x%p\n", i, _reg_mac[i], &(_reg_mac[i]));
 				*ptr = _reg_mac[i];  // send the final result back to the processor
@@ -189,9 +189,9 @@ void TDmaMult::ReadData(){
 
 				for (i=0;i<SIMD_SIZE;i++){
 					w_ptr = _mem0->GetMap(_memW[i]+_mem_idx);
-					_op1[i] = *(float*)w_ptr;
+					_op1[i] = *(int*)w_ptr;
 					i_ptr = _mem0->GetMap(_memI[i]+_mem_idx);
-					_op2[i]  = *(float*)i_ptr;
+					_op2[i]  = *(int*)i_ptr;
 					//if ( _op1[i] != 0.0f)
 					//	printf ("OPs[%d %d]: %f %f\n", _mem_idx, i, _op1[i], _op2[i]);
 				}
