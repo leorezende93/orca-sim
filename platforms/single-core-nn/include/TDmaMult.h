@@ -77,6 +77,7 @@ private:
 	/// control signals.
 	USignal<uint8_t>*  _sig_stall;      ///< (OUT): stalls cpu while the DMA is copying from the memories.
 	USignal<uint8_t>*  _sig_dma_prog;   ///< (IN): processor writes 1 to start the DMA.
+	USignal<uint32_t>* _dma_initial_addr;   ///< (IN): processor writes 1 to start the DMA.
 	///@}
 
 	///@{
@@ -107,7 +108,9 @@ private:
 	//others 
 	uint32_t _remaining;        ///< count number of data to be read.
 	/// memory idx used to access both the input and weight memories.
-	uint32_t _mem_idx;
+	//uint32_t _mem_idx;
+	uint32_t _i_mem_idx;
+	uint32_t _w_mem_idx;
 
 	///@}
 
@@ -135,7 +138,7 @@ public:
 	 * @param base_mac_out_addr: base address to the array with the output of the MACs.
 	 * @param mac: pointer to the MAC module.
 	 * */
-    TDmaMult(string name, USignal<uint8_t>* stall, USignal<uint8_t>* dma_start, USignal<uint32_t>* burst_size, 
+    TDmaMult(string name, USignal<uint8_t>* stall, USignal<uint8_t>* dma_start, USignal<uint32_t>* dma_initial_addr, USignal<uint32_t>* burst_size, 
 		USignal<uint32_t>* nn_size, USignal<uint32_t>* out_size, uint32_t base_mac_out_addr, UMemory* main_mem);
 		
 	/** dtor

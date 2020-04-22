@@ -33,7 +33,7 @@
 
 TDmaMult::TDmaMult(std::string name,  
 	//signals
-	USignal<uint8_t>* stall, USignal<uint8_t>* dma_start, USignal<uint32_t>* burst_size, USignal<uint32_t>* nn_size, 
+	USignal<uint8_t>* stall, USignal<uint8_t>* dma_start, USignal<uint32_t>* dma_initial_addr, USignal<uint32_t>* burst_size, USignal<uint32_t>* nn_size, 
 	USignal<uint32_t>* out_size, uint32_t base_mac_out_addr, UMemory* main_mem) : TimedModel(name) {
     
 	int i;
@@ -41,6 +41,9 @@ TDmaMult::TDmaMult(std::string name,
 	// control signal sent to the proc
 	_sig_stall = stall;
 	_sig_dma_prog = dma_start;
+	//printf("dma_start == %d\n",dma_start->Read());
+	_dma_initial_addr = dma_initial_addr;
+	//printf("dma_initial_addr == %d\n",dma_initial_addr->Read());
 
 	// data signals sent by the proc
 	_sig_burst_size = burst_size;
@@ -53,6 +56,8 @@ TDmaMult::TDmaMult(std::string name,
 	_memI[0] = MEMI_BASE;
 	for ( i = 1; i < SIMD_SIZE; i++)
 	{
+		//_memW[0] = MEMW_BASE + _dma_initial_addr->Read();
+		//printf("MEMW_BASE == %x\n",_memW[0]);
 		_memW[i] = _memW[i-1] + NN_MEM_SIZE_PER_CHANNEL;
 		_memI[i] = _memI[i-1] + NN_MEM_SIZE_PER_CHANNEL;
 	}
@@ -114,8 +119,12 @@ void TDmaMult::DoAcc(){
 			}break;
 		case DmaState::COPY_FROM_MEM:{
 			if (_mul_ready == 0x1){
+				printf("dma: _reg_mac[0] == %d\n",_reg_mac[8]);
+				printf("dma: _reg_mul[0] == %d\n",_reg_mul[8]);
 				for (i=0;i<SIMD_SIZE;i++){
 					_reg_mac[i] += _reg_mul[i];
+					if (i == 8)
+						printf("dma: _reg_mac == %d\n",_reg_mac[i]);
 				}
 			} 
 			}break;
@@ -146,7 +155,9 @@ void TDmaMult::DoMult(){
 		if (_mul_loaded == 0x1){
 			for (i=0;i<SIMD_SIZE;i++){
 				_reg_mul[i] = _op1[i] * _op2[i]; // mult
-			}				
+			}
+			
+			//printf("dma: %d * %d\n",_op1[0],_op2[0]);				
 			_mul_ready = 1;
 		}else{
 			_mul_ready = 0;
@@ -174,8 +185,10 @@ void TDmaMult::ReadData(){
 //				_w_mem_idx = _sig_nn_size->Read();
 //				_i_mem_idx = _sig_out_size->Read();
 				// init counters used for burst mode operation
-				_mem_idx = 0;
-				_remaining = _burst_size;
+				printf("dma: _dma_initial_addr == %x\n",_dma_initial_addr->Read());
+				_w_mem_idx = _dma_initial_addr->Read();
+				_i_mem_idx = 0;
+				_remaining = _burst_size + 1;
 				_dma_state = DmaState::COPY_FROM_MEM; //change states
 			}
 			
@@ -184,14 +197,23 @@ void TDmaMult::ReadData(){
 		//copy data from the NN memory to the internal MAC registers
 		case DmaState::COPY_FROM_MEM:{
 			
+			//for (i = 0; i < SIMD_SIZE; i++) {
+				//_memW[0] = MEMW_BASE + _dma_initial_addr->Read();
+				//_memW[i] = _memW[i] + _dma_initial_addr->Read();
+			//}
+						
 			if(_remaining > 0){
 				int8_t * w_ptr, * i_ptr;
-
+				
+				if (_memW[0]+_w_mem_idx >= 0x40600000 && _memW[0]+_w_mem_idx <= 0x40700000)
+					printf("dma: %x -> _memW[0]+_w_mem_idx == %x\n",_memW[0],_memW[0]+_w_mem_idx);
 				for (i=0;i<SIMD_SIZE;i++){
-					w_ptr = _mem0->GetMap(_memW[i]+_mem_idx);
+					w_ptr = _mem0->GetMap(_memW[i]+_w_mem_idx);
 					_op1[i] = *(int*)w_ptr;
-					i_ptr = _mem0->GetMap(_memI[i]+_mem_idx);
+					i_ptr = _mem0->GetMap(_memI[i]+_i_mem_idx);
 					_op2[i]  = *(int*)i_ptr;
+					if (_memW[i]+_w_mem_idx >= 0x40600000 && _memW[i]+_w_mem_idx <= 0x40700000)
+						printf("op1 * op2 == %d * %d\n",_op1[i], _op2[i]);
 					//if ( _op1[i] != 0.0f)
 					//	printf ("OPs[%d %d]: %f %f\n", _mem_idx, i, _op1[i], _op2[i]);
 				}
@@ -199,15 +221,17 @@ void TDmaMult::ReadData(){
 				_mul_loaded = 1; 
 				// updating counters used for burst mode operation
 				_remaining--; //one less packet to send
-				_mem_idx +=4;
-			}else{
-				_mul_loaded = 0; 
+				_i_mem_idx +=4;
+				_w_mem_idx +=4;
+			}else{ 
+				_mul_loaded = 0;
 				_dma_state = DmaState::COPY_TO_CPU;
 			}
 		} break;	
 
 		case DmaState::COPY_TO_CPU:{
 			// result is written back to the output MMIO register
+			//_mul_loaded = 0;
 			_dma_state = DmaState::FLUSH;
 			}break;
 

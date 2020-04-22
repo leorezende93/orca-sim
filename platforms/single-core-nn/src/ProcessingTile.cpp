@@ -33,6 +33,7 @@ ProcessingTile::ProcessingTile() {
 	//DMA control signals
 	_sig_stall      = new USignal<uint8_t>(SIGNAL_CPU_STALL, this->GetName() + ".stall");
 	_sig_dma_prog   = new USignal<uint8_t>(SIGNAL_DMA_PROG, this->GetName() + ".dma_prog");
+	_dma_initial_addr = new USignal<uint32_t>(DMA_INITIAL_ADDR, this->GetName() + ".dma_initial_addr");
 	// dummy signal required by the cpu
 	_sig_intr       = new USignal<uint8_t>(SIGNAL_CPU_INTR,  this->GetName() + ".intr");
 
@@ -46,7 +47,7 @@ ProcessingTile::ProcessingTile() {
 	_cpu   = new THellfireProcessor(this->GetName() + ".cpu", _sig_intr, _sig_stall);
 
 	// configurable DMA controller which is able to feed multiple MACs in parallel
-	_dma  = new TDmaMult(this->GetName() + ".dma_mult", _sig_stall, _sig_dma_prog, _sig_burst_size,
+	_dma  = new TDmaMult(this->GetName() + ".dma_mult", _sig_stall, _sig_dma_prog, _dma_initial_addr, _sig_burst_size,
 				 _sig_nn_size, _sig_out_size, DMA_MAC_OUT_ARRAY, _mem0);
 	//binds cpu to the main memory
 	_cpu->SetMem0(_mem0);   
@@ -54,6 +55,7 @@ ProcessingTile::ProcessingTile() {
 	//bind control signals to hardware (cpu side)
 	_sig_stall->MapTo((uint8_t*)_mem0->GetMap(SIGNAL_CPU_STALL), SIGNAL_CPU_STALL);
 	_sig_dma_prog->MapTo((uint8_t*)_mem0->GetMap(SIGNAL_DMA_PROG), SIGNAL_DMA_PROG);
+	_dma_initial_addr->MapTo((uint32_t*)_mem0->GetMap(DMA_INITIAL_ADDR), DMA_INITIAL_ADDR);
 	_sig_intr->MapTo((uint8_t*)_mem0->GetMap(SIGNAL_CPU_INTR), SIGNAL_CPU_INTR);
 
 	_sig_burst_size->MapTo((uint32_t*)_mem0->GetMap(DMA_BURST_SIZE), DMA_BURST_SIZE);
@@ -110,6 +112,7 @@ ProcessingTile::~ProcessingTile(){
 	//delete signals 
 	delete(_sig_stall);
 	delete(_sig_dma_prog);
+	delete(_dma_initial_addr);
 	delete(_sig_intr);
 	delete(_sig_burst_size);
 	delete(_sig_nn_size);
@@ -120,6 +123,7 @@ void ProcessingTile::Reset(){
 	//reset control wires
 	_sig_stall->Write(0);
 	_sig_dma_prog ->Write(0);
+	_dma_initial_addr ->Write(0);
 	_sig_intr->Write(0);
 
 	//DMA data signals
@@ -138,6 +142,7 @@ TDmaMult* ProcessingTile::GetDma(){
 /************************************* GETTERS **************************************/
 USignal<uint8_t>*  ProcessingTile::GetSignalStall(){ return _sig_stall; }
 USignal<uint8_t>*  ProcessingTile::GetSignalDmaProg(){ return _sig_dma_prog; }
+USignal<uint32_t>*  ProcessingTile::GetDmaInitialAddr(){ return _dma_initial_addr; }
 USignal<uint8_t>*  ProcessingTile::GetSignalIntr(){ return _sig_intr; }
 
 

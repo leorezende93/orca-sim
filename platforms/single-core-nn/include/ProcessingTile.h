@@ -105,7 +105,7 @@ where, for instance:
 #define SIGNAL_CPU_STALL    0x40412000  // 8 bits
 #define SIGNAL_CPU_INTR     0x40412001
 #define SIGNAL_DMA_PROG     0x40412002
-//							0x40410003  // not used
+#define DMA_INITIAL_ADDR	0x40410003  
 #define DMA_BURST_SIZE	    0x40412004  // 32 bits 
 #define DMA_NN_SIZE  	    0x40412008
 #define DMA_OUT_SIZE  	    0x4041200C
@@ -171,6 +171,7 @@ private:
 	/// control signals.
 	USignal<uint8_t>*  _sig_stall;          ///< stalls cpu while copying from the memories
 	USignal<uint8_t>*  _sig_dma_prog;       ///< flag to start the DMA
+	USignal<uint32_t>*  _dma_initial_addr;   ///< initial address to start the DMA operation    
 	USignal<uint8_t>*  _sig_intr;			///< dummy signal required by the CPU. not really used since we dont have interrupts in this design
 	///@}
 	
@@ -188,6 +189,7 @@ public:
 	//getters
     USignal<uint8_t>*  GetSignalStall();
 	USignal<uint8_t>*  GetSignalDmaProg();
+	USignal<uint32_t>* GetDmaInitialAddr();
 	USignal<uint8_t>*  GetSignalIntr();    ///> required only by the cpu and orca. not really usefull 
 	
 	//getters
