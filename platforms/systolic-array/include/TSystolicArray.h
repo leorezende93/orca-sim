@@ -31,8 +31,7 @@
 #include <string>
 
 enum class SystolicArrayState{
-	INIT_ARRAY,
-	START_MULT,    
+	INIT_ARRAY, 
 	SHIFT_OUT,
 	END_OP,
 };
@@ -51,19 +50,24 @@ private:
     
     // Control signals
     int _start;
-    int _shift_acc;
-    int _shift_z;
     
     // Internal registers
     int _cont_row;
 	int _cont_column;
+	
+	// States
+	void InitArray();
+	void ShiftOut();
+	void EndOp();
+	
+	// Others
+	void StartMult();
 
 public:	
      // Other 
     SimulationTime Run();
-    void DoComputation();
     std::string GetName();
-    void Reset();
+    void Reset();  
 
     TSystolicArray(string name, 
 					int _a_buffer[][N],

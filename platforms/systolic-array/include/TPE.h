@@ -37,43 +37,44 @@ private:
 
 	// Control signals
 	int *_start_in;
-	int *_shift_acc_in;
-	int *_shift_z_in;
 	
 	// Inputs
-	uint32_t _a_in;
-	uint32_t _b_in;
-	uint32_t _z_in;
+	int *_a_in;
+	int *_b_in;
 	
 	// Outputs
-	uint32_t _z_out;
-	
+	int *_a_out;
+	int *_b_out;
+		
 	// Internal Registers
-	uint32_t _acc;
-	
+	int _acc;
+		
 public:	
     // Setters
-    void SetTPEAInput(uint32_t z_out);
-    void SetTPEBInput(uint32_t z_in);
-    void SetTPEZInput(uint32_t z_in);
+    void SetTPEAInput(int* a_in);
+    void SetTPEBInput(int* b_in);
     
-    // Getters
-    uint8_t GetTPEZInput();
-	uint8_t GetTPEX();
-	uint8_t GetTPEY();
-	uint32_t GetMACResult();
-	uint32_t GetTPEZOutput();
-	
+	// Getters for ports
+	int* GetTPEAOutput();
+	int* GetTPEBOutput();
+    
+    // Getters for values
+    int GetAInputValue();
+	int GetBInputValue();
+	int GetAOutputValue();
+	int GetBOutputValue();
+	int GetMACResult();
 
     // Other 
-    SimulationTime Run();
-    void DoMAC();		
-    void ShiftTPEResult();
     void Reset();
+    void DoMAC();	
+    void ShiftTPEAInput();
+    void ShiftTPEBInput();
+    void ShiftTPEResult();
+	SimulationTime Run();  
 
     TPE(string name, uint8_t x, uint8_t y, 
-		int &start_in, int &shift_acc_in, int &shift_z_in,
-		uint32_t a_in, uint32_t b_in, uint32_t z_in);
+		int &start_in);
 
     ~TPE();
 };

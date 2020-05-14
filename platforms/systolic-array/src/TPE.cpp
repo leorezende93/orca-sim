@@ -31,18 +31,22 @@
 TPE::TPE(std::string name,  
 	//signals
 	uint8_t x, uint8_t y,
-	int &start, int &shift_acc, int &shift_z_in,
-	uint32_t a_in, uint32_t b_in, uint32_t z_in) : TimedModel(name) {
-    	    
+	int &start) : TimedModel(name) {
+   
+	// Pointer initialize
+	int* init_pointer = 0;
+	int init_value;
+	init_value = 0;
+	init_pointer = &init_value;
+
     _x = x;
     _y = y;
 	_start_in = &start;
-	_shift_acc_in = &shift_acc;
-	_shift_z_in = &shift_z_in;
-	_a_in = a_in;
-	_b_in = b_in;
-	_z_in = z_in;
-	
+	_a_in  = init_pointer;
+	_b_in  = init_pointer;
+	_a_out = init_pointer;
+	_b_out = init_pointer;
+		
 	this->Reset();
 }
 
@@ -50,57 +54,66 @@ TPE::~TPE(){
 }
 
 void TPE::Reset(){
-	_z_out = 0;
 	_acc = 0;
 }
 
 void TPE::DoMAC(){
 	if (*_start_in == 1)
-		_acc = _acc + (_a_in * _b_in);
+		_acc = _acc + ((*_a_in) * (*_b_in));
 }
 
-uint8_t TPE::GetTPEZInput(){
-	return _z_in;
-}
-
-uint8_t TPE::GetTPEX(){
-	return _x;
-}
-
-uint8_t TPE::GetTPEY(){
-	return _y;
-}
-
-uint32_t TPE::GetMACResult(){
-	return _acc;
-}
-
-uint32_t TPE::GetTPEZOutput(){
-	return _z_out;
-}
-
-void TPE::SetTPEAInput(uint32_t a_in){
+void TPE::SetTPEAInput(int* a_in){
 	_a_in = a_in;
 }
 
-void TPE::SetTPEBInput(uint32_t b_in){
+void TPE::SetTPEBInput(int* b_in){
 	_b_in = b_in;
 }
 
-void TPE::SetTPEZInput(uint32_t z_in){
-	_z_in = z_in;
+int* TPE::GetTPEAOutput(){
+	return _a_out;
+}
+
+int* TPE::GetTPEBOutput(){
+	return _b_out;
+}
+
+int TPE::GetAOutputValue(){
+	return *_a_out;
+}
+
+int TPE::GetBOutputValue(){
+	return *_b_out;
+}
+
+int TPE::GetAInputValue(){
+	return *_a_in;
+}
+
+int TPE::GetBInputValue(){
+	return *_b_in;
+}
+
+int TPE::GetMACResult(){
+	return _acc;
+}
+
+void TPE::ShiftTPEAInput(){	
+	_a_out = _a_in;
+}
+
+void TPE::ShiftTPEBInput(){	
+	_b_out = _b_in;
 }
 
 void TPE::ShiftTPEResult(){	
-	if (*_shift_acc_in == 1)
-		_z_out = _acc;
-	
-	if (*_shift_z_in == 1)
-		_z_out = _z_in;		
+	_b_out = &_acc;
 }
 
 SimulationTime TPE::Run(){
 	this->DoMAC();
+	this->ShiftTPEAInput();
+	this->ShiftTPEBInput();
 	this->ShiftTPEResult();
     return 1;
 }
