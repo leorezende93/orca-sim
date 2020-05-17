@@ -104,10 +104,10 @@ void TSystolicArray::InitArray(){
 				}
 			}
 			
-			this->StartMult();
+			//this->StartMult();
 									
-			if (_cont_column < N) 
-				_systolic_array_state = SystolicArrayState::INIT_ARRAY;
+			if (_cont_column <= N) 
+				_systolic_array_state = SystolicArrayState::START_MULT;
 			else {
 				_systolic_array_state = SystolicArrayState::SHIFT_OUT;
 				_cont_column = 0;
@@ -122,11 +122,15 @@ void TSystolicArray::StartMult(){
 	int x,y;
 	
 	_start = 1;
-	
-	for (x = 0; x < N; x++){
-		for (y = 0; y < N; y++){
-			_PE[x][y]->DoMAC();
+	switch(_systolic_array_state){	
+		case SystolicArrayState::START_MULT:{
+		for (x = 0; x < N; x++){
+			for (y = 0; y < N; y++){
+				_PE[x][y]->DoMAC();
+			}
 		}
+		_systolic_array_state = SystolicArrayState::INIT_ARRAY;
+		} default: break;
 	}
 }
 
@@ -202,6 +206,7 @@ std::string TSystolicArray::GetName() {
 
 SimulationTime TSystolicArray::Run() {
 	this->InitArray();
+	this->StartMult();
 	this->ShiftOut();
 	this->EndOp();
     return 1;

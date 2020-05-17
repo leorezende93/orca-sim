@@ -31,7 +31,8 @@
 #include <string>
 
 enum class SystolicArrayState{
-	INIT_ARRAY, 
+	INIT_ARRAY,
+	START_MULT,
 	SHIFT_OUT,
 	END_OP,
 };
