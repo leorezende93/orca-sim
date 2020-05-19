@@ -31,21 +31,20 @@
 TPE::TPE(std::string name,  
 	//signals
 	uint8_t x, uint8_t y,
-	int &start) : TimedModel(name) {
-   
-	// Pointer initialize
-	int* init_pointer = 0;
-	int init_value;
-	init_value = 0;
-	init_pointer = &init_value;
+	int &start, int &shift_acc, int &shift_out) : TimedModel(name) {
+
+	_a_in  = new USignal<uint32_t>(0x00000000,this->GetName() + ".a_in");
+	_b_in  = new USignal<uint32_t>(0x00000000,this->GetName() + ".b_in");
+	_z_in  = new USignal<uint32_t>(0x00000000,this->GetName() + ".b_in");
+	_a_out = new USignal<uint32_t>(0x00000000,this->GetName() + ".a_out");
+	_b_out = new USignal<uint32_t>(0x00000000,this->GetName() + ".b_out");
+	_z_out = new USignal<uint32_t>(0x00000000,this->GetName() + ".b_out");
 
     _x = x;
     _y = y;
 	_start_in = &start;
-	_a_in  = init_pointer;
-	_b_in  = init_pointer;
-	_a_out = init_pointer;
-	_b_out = init_pointer;
+	_shift_acc_in = &shift_acc;
+	_shift_out_in = &shift_out;
 		
 	this->Reset();
 }
@@ -59,61 +58,90 @@ void TPE::Reset(){
 
 void TPE::DoMAC(){
 	if (*_start_in == 1)
-		_acc = _acc + ((*_a_in) * (*_b_in));
+		_acc = _acc + ((_a_in->Read()) * (_b_in->Read()));
 }
 
-void TPE::SetTPEAInput(int* a_in){
+void TPE::SetTPEAInput(USignal<uint32_t>* a_in){
 	_a_in = a_in;
 }
 
-void TPE::SetTPEBInput(int* b_in){
+void TPE::SetTPEBInput(USignal<uint32_t>* b_in){
 	_b_in = b_in;
 }
 
-int* TPE::GetTPEAOutput(){
+void TPE::SetTPEZInput(USignal<uint32_t>* z_in){
+	_z_in = z_in;
+}
+  
+void TPE::SetAInputValue(uint32_t value){
+	_a_in->Write(value);
+}
+
+void TPE::SetBInputValue(uint32_t value){
+	_b_in->Write(value);
+}
+   
+USignal<uint32_t>* TPE::GetTPEAOutput(){
 	return _a_out;
 }
 
-int* TPE::GetTPEBOutput(){
+USignal<uint32_t>* TPE::GetTPEBOutput(){
 	return _b_out;
 }
 
-int TPE::GetAOutputValue(){
-	return *_a_out;
+USignal<uint32_t>* TPE::GetTPEZOutput(){
+	return _z_out;
 }
 
-int TPE::GetBOutputValue(){
-	return *_b_out;
+uint32_t TPE::GetAOutputValue(){
+	return _a_out->Read();
 }
 
-int TPE::GetAInputValue(){
-	return *_a_in;
+uint32_t TPE::GetBOutputValue(){
+	return _b_out->Read();
 }
 
-int TPE::GetBInputValue(){
-	return *_b_in;
+uint32_t TPE::GetZOutputValue(){
+	return _z_out->Read();
 }
 
-int TPE::GetMACResult(){
+uint32_t TPE::GetAInputValue(){
+	return _a_in->Read();
+}
+
+uint32_t TPE::GetBInputValue(){
+	return _b_in->Read();
+}
+
+uint32_t TPE::GetMACResult(){
 	return _acc;
 }
 
 void TPE::ShiftTPEAInput(){	
-	_a_out = _a_in;
+	_a_out->Write(_a_in->Read());
 }
 
 void TPE::ShiftTPEBInput(){	
-	_b_out = _b_in;
+	_b_out->Write(_b_in->Read());
+}
+
+void TPE::ShiftTPEZInput(){	
+	if (*_shift_out_in == 1)
+		_z_out->Write(_z_in->Read());
 }
 
 void TPE::ShiftTPEResult(){	
-	_b_out = &_acc;
+	if (*_shift_acc_in == 1)
+		_z_out->Write(_acc);
+}
+
+std::string TPE::GetName() {
+	return ".PE";
 }
 
 SimulationTime TPE::Run(){
-	this->DoMAC();
-	this->ShiftTPEAInput();
-	this->ShiftTPEBInput();
+	this->ShiftTPEZInput();
 	this->ShiftTPEResult();
+	this->DoMAC();
     return 1;
 }

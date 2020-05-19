@@ -51,6 +51,8 @@ private:
     
     // Control signals
     int _start;
+    int _shift_acc;
+    int _shift_out;
     
     // Internal registers
     int _cont_row;
