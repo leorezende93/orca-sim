@@ -28,10 +28,7 @@
 //simulator API
 #include <TSystolicArray.h>
 
-TSystolicArray::TSystolicArray(std::string name,  
-	//signals
-	int _a_buffer[][N],
-	int _b_buffer[][N]) : TimedModel(name) {
+TSystolicArray::TSystolicArray(std::string name) : TimedModel(name){
     
     int x,y;
      
@@ -50,12 +47,12 @@ TSystolicArray::TSystolicArray(std::string name,
 	for (x = 0; x < N; x++){
 		for (y = 1; y < N; y++){
 			_PE[x][y]->SetTPEAInput(_PE[x][y-1]->GetTPEAOutput());
+			_PE[x][y]->SetTPEBInput(_PE[x][y-1]->GetTPEBOutput());
 		}
 	}
 	
 	for (x = 1; x < N; x++){
 		for (y = 0; y < N; y++){
-			_PE[x][y]->SetTPEBInput(_PE[x-1][y]->GetTPEBOutput());
 			_PE[x][y]->SetTPEZInput(_PE[x-1][y]->GetTPEZOutput());
 		}
 	}
@@ -79,12 +76,34 @@ void TSystolicArray::Reset(){
 	}
 		
 	// Initialize matrixs
-	for (x = 0; x < N; x++){
-		for (y = 0; y < N; y++){		
-			_a_buffer[x][y] = (x*2) + 5 + y;
-			_b_buffer[x][y] = (y+1) + x;
-		}
-	}	
+	//for (x = 0; x < N; x++){
+	//	for (y = 0; y < N; y++){		
+	//		_a_buffer[x][y] = (x*2) + 5 + y;
+	//		_b_buffer[x][y] = (y+1) + x;
+	//	}
+	//}	
+}
+
+void TSystolicArray::SetABuffer(int i, int j, int data){
+	_a_buffer[i][j] = data;
+	//printf("%d ",_a_buffer[i][j]);
+}
+	
+void TSystolicArray::SetBBuffer(int i, int j, int data){
+	_b_buffer[i][j] = data;
+	//printf("%d ",_b_buffer[i][j]);
+}
+
+void TSystolicArray::SetInit(int init){
+	_init = init;
+}
+
+int TSystolicArray::GetAdderValue(){
+	return _acc;
+}
+
+int TSystolicArray::GetEOP(){
+	return _eop;
 }
 
 void TSystolicArray::InitArray(){
@@ -92,39 +111,37 @@ void TSystolicArray::InitArray(){
 	
 	switch(_systolic_array_state){	
 		case SystolicArrayState::INIT_ARRAY:{					
-			_start = 0;
-			
-			for (x = 0; x < N; x++) {
-				_PE[x][0]->SetAInputValue(_a_buffer[x][_cont_column]);
-				_PE[x][0]->ShiftTPEAInput();
-				_PE[0][x]->SetBInputValue(_b_buffer[_cont_row][x]);
-				_PE[0][x]->ShiftTPEBInput();
-			}
-			_cont_column = _cont_column + 1;
-			_cont_row = _cont_row + 1;		
-														
-			for (x = 0; x < N; x++){
-				for (y = 1; y < N; y++){
-					_PE[x][y]->ShiftTPEAInput();
-				}
-			}
-			
-			for (x = 1; x < N; x++){
-				for (y = 0; y < N; y++){
-					_PE[x][y]->ShiftTPEBInput();
-				}
-			}
-									
-			if (_cont_column <= N) 
-				_systolic_array_state = SystolicArrayState::START_MULT;
-			else {
-				_systolic_array_state = SystolicArrayState::SHIFT_OUT;
+			if(_init == 1) {
 				_start = 0;
-				_cont_column = 0;
-				_cont_row = 0;
-				_shift_acc = 1;
-				_shift_out = 0;
-			}
+				_eop = 0;
+				for (x = 0; x < N; x++) {
+					_PE[x][0]->SetAInputValue(_a_buffer[x][_cont_column]);
+					//printf("%d ",_a_buffer[x][_cont_column]);
+					//_PE[x][0]->ShiftTPEAInput();
+					_PE[x][0]->SetBInputValue(_b_buffer[x][_cont_column]);
+					//printf("%d \n",_b_buffer[x][_cont_column]);
+					//_PE[x][0]->ShiftTPEBInput();
+				}
+				//printf("\n");
+				_cont_column = _cont_column + 1;
+				_cont_row = _cont_row + 1;																	
+										
+				if (_cont_column < N) {
+					for (x = N-1; x >= 0; x--){
+						for (y = N-1; y >=0; y--){
+							_PE[x][y]->ShiftTPEAInput();
+							_PE[x][y]->ShiftTPEBInput();
+						}
+					}
+					_systolic_array_state = SystolicArrayState::INIT_ARRAY;
+				} else {							
+					_systolic_array_state = SystolicArrayState::START_MULT;
+					_cont_column = 0;
+					_cont_row = 0;
+					_start = 1;
+				}
+			} else
+				_systolic_array_state = SystolicArrayState::INIT_ARRAY;
 		}break;	
 		default: break;
 	}
@@ -133,8 +150,9 @@ void TSystolicArray::InitArray(){
 void TSystolicArray::StartMult(){	
 	switch(_systolic_array_state){	
 		case SystolicArrayState::START_MULT:{
-			_start = 1;
-			_systolic_array_state = SystolicArrayState::INIT_ARRAY;
+			_systolic_array_state = SystolicArrayState::SHIFT_OUT;
+			_shift_acc = 1;
+			_shift_out = 0;
 		} default: break;
 	}
 }
@@ -144,20 +162,29 @@ void TSystolicArray::ShiftOut(){
 		
 	switch(_systolic_array_state){			
 		case SystolicArrayState::SHIFT_OUT:{
+				
+			//printf("acc -> %d & out _> %d\n",_shift_acc,_shift_out);
+		
 			_start = 0;	
-			_shift_out = 1;
-			_shift_acc = 0;
-			
+			_eop = 0;
 			if (_cont_row < N){
-				_shift_out = 1;
+				//if (_cont_row == 0)
+				//	_shift_acc = 1;
+				//else
+					_shift_out = 1;
+					_shift_acc = 0;
 				
 				for (y = 0; y < N; y++) {
 					_z_buffer[N-(_cont_row+1)][y] = _PE[N-1][y]->GetZOutputValue();
-				}			
+					_acc = _acc + _PE[N-1][y]->GetZOutputValue();
+				}
+				
+				//_shift_out = 1;
+				//_shift_acc = 0;			
 			}
 							
 			_cont_row++;
-		
+			
 			if (_cont_row == N)
 				_systolic_array_state = SystolicArrayState::END_OP;
 		}break;
@@ -170,24 +197,49 @@ void TSystolicArray::EndOp(){
 	
 	switch(_systolic_array_state){			
 			case SystolicArrayState::END_OP:{
-			printf("systolic_array: accumulator result!\n");
-			for (x = 0; x < N; x++){
-				for (y = 0; y < N; y++){
-					printf("%d ", _PE[x][y]->GetMACResult());
+			if (_eop == 0){
+				printf("systolic_array: accumulator result!\n");
+				for (x = 0; x < N; x++){
+					for (y = 0; y < N; y++){
+						printf("%d ", _PE[x][y]->GetMACResult());
+					}
+					printf("\n");
 				}
-				printf("\n");
+				
+				printf("systolic_array: shifted out result!\n");
+				for (x = 0; x < N; x++){
+					for (y = 0; y < N; y++){
+						printf("%d ", _z_buffer[x][y]);
+					}
+					printf("\n");
+				}
+				
+				printf("systolic_array: acc out result!\n");
+				printf("%d\n", _acc);
+				
+				
+				printf("Done!\n");
 			}
 			
-			printf("systolic_array: shifted out result!\n");
-			for (x = 0; x < N; x++){
-				for (y = 0; y < N; y++){
-					printf("%d ", _z_buffer[x][y]);
-				}
-				printf("\n");
-			}
+			_eop = 1;
 			
-			printf("Done!\n");
-			while(1);
+			if (_init == 0){
+				_systolic_array_state = SystolicArrayState::INIT_ARRAY;
+				_eop = 0;
+				
+				// Clearing PEs and accumulator
+				for (x = 0; x < N; x++){
+					for (y = 0; y < N; y++){
+						_PE[x][y]->Reset();
+						_acc = 0;
+					}
+				}
+				
+				printf("systolic_array: going to INIT_ARRAY state!\n"); 
+			}
+			else
+				_systolic_array_state = SystolicArrayState::END_OP;
+			//while(1);
 		}break;
 		default: break;
 	}
@@ -204,7 +256,9 @@ SimulationTime TSystolicArray::Run() {
 	this->ShiftOut();
 	this->InitArray();
 	this->StartMult();
-	    
+	
+	//printf("acc -> %d & out _> %d\n",_shift_acc,_shift_out);
+		    
     for (x = N-1; x >= 0; x--){
 		for (y = N-1; y >= 0; y--){
 			_PE[x][y]->Run();
