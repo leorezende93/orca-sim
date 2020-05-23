@@ -21,6 +21,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA. **/
 #include <iostream>
 #include <sstream>
+#include <fstream>
 
 //model API
 #include <Testbench.h>
@@ -38,6 +39,12 @@ Testbench::Testbench(string name) : TimedModel(name) {
 	_i = 0;
 	_j = 0;
 	_k = 0;
+	_end_of_simulation = 0;
+	
+	// Log file
+	log.open("./platforms/lenet5-conv-acc/output_log.txt");
+	log.precision(2);
+	log << std::fixed;
 	
 	this->Reset();
 }
@@ -54,92 +61,61 @@ std::string Testbench::GetName(){
 	return ".testbench";
 }
 
+int Testbench::GetEndOfSimulation(){
+	return _end_of_simulation;
+}
+
 void Testbench::TBInit(){
 	int m,n;
 	
-	
-	//float acc;
-	//float Layer2[LAYER2_DIMENSION][LAYER2_DIMENSION];
-		
-	int i = 0;
-	//_j = 0;
-	m = 0;
-	n = 0;
-
-	//_array->SetInit(0);
-	
-	if (_j != 13 && _array->GetEOP() == 0) {
-		printf("tb: starting testbench!\n");
-		//_flag = 0;
-		//for (i = 0; i < NUMBER_OF_FILTERS; i++){
-			//for (_j = 0; _j < LAYER2_DIMENSION; _j++){
-				//for (k = 0; k < LAYER2_DIMENSION; k++){
-					//acc = Layer1_Weights_CPU[k*(NUMBER_OF_FILTERS*NUMBER_OF_FILTERS+1)];
-					for (m = 0; m < FILTER_DIMENSION; m++){
-						//printf("tb: starting convolution!\n");
-						for (n = 0; n < FILTER_DIMENSION; n++){
-							_array->SetABuffer(m,n,Layer1_Weights_CPU[(NUMBER_OF_FILTERS*NUMBER_OF_FILTERS+1)*i + FILTER_DIMENSION*m + n + 1]);
-							//Layer1_Weights_CPU[26*i+5*m+n+1]
-							_array->SetBBuffer(m,n,data0[IMAGE_DIMENSION*(m+STRIDE*_j) + n + STRIDE*_k]);
-							//Layer1_Neurons_CPU[29*(m+2*_j)+n+2*k]
-						}
-					}
-					
-					printf("tb: starting PEs!\n");
-					_array->SetInit(1);
-					//_array->WaitBuffersInitialization();
-					//_array->SetInit(0);
-					//_array->DoComputation();
-				
-					//printf("tb: sum result = %d\n",_array->GetZBufferSum());
-					//acc = acc + _array->GetZBufferSum();
-					//Layer2[m][n] = SIGMOID(acc/100.0);
-					//printf("tb: conv result = %.2f\n",Layer2[m][n]);
-				//}
-			//}
-		//}
+	if (_i != NUMBER_OF_FILTERS && _array->GetEOP() == 0) {
+			for (m = 0; m < FILTER_DIMENSION; m++){
+				for (n = 0; n < FILTER_DIMENSION; n++){
+					_array->SetABuffer(m,n,Layer1_Weights_CPU[(FILTER_DIMENSION*FILTER_DIMENSION+1)*_i + FILTER_DIMENSION*m + n + 1]);
+					_array->SetBBuffer(m,n,data0[IMAGE_DIMENSION*(m+STRIDE*_j) + n + STRIDE*_k]);
+				}
+			}	
+			_array->SetInit(1);
+		}
 	}
-	
-	//printf("tb: conv result!\n");
-	//for (m = 0; m < LAYER2_DIMENSION; m++){
-	//	for (n = 0; n < LAYER2_DIMENSION; n++){
-	//		printf("%.2f ",Layer2[m][n]);
-	//	}
-	//	printf("\n");
-	//}
-	//getchar();
-}
 
 void Testbench::TBStore(){
-	int x,y,i = 0;
+	int x,y,idx;
 	
 	if(_array->GetEOP() == 1){
-		
-		printf("tb: storing conv value\n");
-		
 		_array->SetInit(0);
-		
-		Layer2_f0[_j][_k] = SIGMOID((_array->GetAdderValue() + Layer1_Weights_CPU[i*(NUMBER_OF_FILTERS*NUMBER_OF_FILTERS+1)])/100.0);
-		
-		printf("tb: partial conv result!\n");
-		for (x = 0; x <= _j; x++) {
-			for (y = 0; y <= _k; y++) {
-				printf("%.2f ",Layer2_f0[x][y]);
-			}
-			printf("\n");
-		}
-		
-		
+		Layer2[_i].ofmap[_j][_k] = SIGMOID((_array->GetAdderValue() + Layer1_Weights_CPU[_i*(FILTER_DIMENSION*FILTER_DIMENSION+1)])/100.0);
+	
 		_k++;
 		if (_k == LAYER2_DIMENSION) {
-			_j++;
 			_k = 0;
+			_j++;
+			if (_j == LAYER2_DIMENSION) {
+				_j = 0;
+				_i++;
+			}
 		}	
 		
-		if (_j == LAYER2_DIMENSION)
-			while(1);
-		
-		//getchar();
+		if (_i == NUMBER_OF_FILTERS) {
+			printf("tb: conv result!\n");
+			for (idx = 0; idx < NUMBER_OF_FILTERS; idx++) {
+				printf("tb: layer2 -> filter%d:\n",idx);
+				for (x = 0; x < LAYER2_DIMENSION; x++) {
+					for (y = 0; y < LAYER2_DIMENSION; y++) {
+						printf("%.2f ",Layer2[idx].ofmap[x][y]);
+						log << Layer2[idx].ofmap[x][y] << " ";
+					}
+					printf("\n");
+					log << endl;
+				}
+				printf("\n");
+				log << endl;
+			}
+			log.close();
+			printf("tb: end of simulation!\n\n");
+			_end_of_simulation = 1;
+			//abort();
+		}		
 	}
 }
 

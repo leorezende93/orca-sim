@@ -22,8 +22,11 @@
 #ifndef __TESTBENCH_H
 #define __TESTBENCH_H
 
+// Parameters
+#define NUMBER_OF_FILTERS 6
 #define STRIDE 2
-#define NUMBER_OF_FILTERS 1
+
+// Matrix dimensions
 #define IMAGE_DIMENSION 29
 #define FILTER_DIMENSION 5
 #define LAYER2_DIMENSION 13
@@ -51,7 +54,6 @@
 class Testbench: public TimedModel{
 
 private:
-
 	///@{ Main components of the system.
 	/// the systolic array
 	TSystolicArray* _array; 
@@ -61,13 +63,19 @@ private:
     int _b_buffer[N][N];
 	
 	// Software buffer
-	float Layer2_f0[LAYER2_DIMENSION][LAYER2_DIMENSION];
-
-	// Verification control
-	//int _flag;
+    typedef struct {
+		float  ofmap[LAYER2_DIMENSION][LAYER2_DIMENSION];
+	} Layer2OutputFeatureMap;
+	Layer2OutputFeatureMap Layer2[NUMBER_OF_FILTERS];   
+	
+	// Output log generation
+	ofstream log;		
 	
 	// Convolution index
 	int _i,_j,_k;
+	
+	// Testbench control
+	int _end_of_simulation;
 	
 	// Testbench functions
 	void TBInit();
@@ -78,6 +86,7 @@ public:
 	~Testbench();
 
 	std::string GetName();
+	int GetEndOfSimulation();
 	
 	void Reset();
 	SimulationTime Run();

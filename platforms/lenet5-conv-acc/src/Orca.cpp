@@ -116,12 +116,7 @@ void check_params(){
 	#endif
 }
 
-int main(int __attribute__((unused)) argc, char** argv){
-
-    //argc = argc; //workaround to use -Wextra
-
-	cout << std::string(argv[1]) << "\n";
-
+int main(){
 	//register interruption handler
 	signal(SIGINT, sig_handler);
 
@@ -157,7 +152,7 @@ int main(int __attribute__((unused)) argc, char** argv){
 	
 		std::chrono::high_resolution_clock::time_point t1, t2;
 	
-		while(!interruption){
+		while(!interruption && !tile->GetTbEndOfSimulation()){
 			
 			t1 = std::chrono::high_resolution_clock::now();
 			s->Run(ORCA_EPOCH_LENGTH);

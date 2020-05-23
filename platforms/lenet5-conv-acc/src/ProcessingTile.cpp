@@ -44,9 +44,13 @@ void ProcessingTile::Reset(){
 	_tb->Reset();
 }
 
+int ProcessingTile::GetTbEndOfSimulation(){
+	return _tb->GetEndOfSimulation();
+}
+
 Testbench* ProcessingTile::GetTestbench(){
 	return _tb;
-} 
+}  
 
 std::string ProcessingTile::ToString(){
 	stringstream ss;

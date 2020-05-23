@@ -23,6 +23,7 @@
 #define __TSYSTOLICARRAY_H
 
 #define N 5
+#define DEBUG 0
 
 //simulator API
 #include <TimedModel.h>

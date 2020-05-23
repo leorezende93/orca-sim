@@ -57,7 +57,6 @@ void TPE::Reset(){
 }
 
 void TPE::DoMAC(){
-	//printf("%d * %d\n",_a_in->Read(),_b_in->Read());
 	if (*_start_in == 1)
 		_acc = _acc + ((_a_in->Read()) * (_b_in->Read()));
 }
@@ -131,11 +130,9 @@ void TPE::ShiftTPEZInput(){
 		_z_out->Write(_z_in->Read());
 }
 
-void TPE::ShiftTPEResult(){	
-	if (*_shift_acc_in == 1) //{
+void TPE::ShiftTPEResult() {	
+	if (*_shift_acc_in == 1) 
 		_z_out->Write(_acc);
-		//printf("PE: shift acc! -> %d\n",_acc);
-	//}
 }
 
 std::string TPE::GetName() {

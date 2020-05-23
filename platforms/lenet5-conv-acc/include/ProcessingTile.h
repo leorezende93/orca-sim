@@ -68,6 +68,7 @@ public:
 		
 	// Getters
 	Testbench* GetTestbench();
+	int GetTbEndOfSimulation();
 	std::string GetName();
 	
 	// Others
