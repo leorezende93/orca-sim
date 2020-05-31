@@ -84,7 +84,7 @@ void Testbench::TBStore(){
 	
 	if(_array->GetEOP() == 1){
 		_array->SetInit(0);
-		Layer2[_i].ofmap[_j][_k] = SIGMOID((_array->GetAdderValue() + Layer1_Weights_CPU[_i*(FILTER_DIMENSION*FILTER_DIMENSION+1)])/100.0);
+		Layer2[_i].ofmap[_j][_k] = _array->GetAdderValue() + Layer1_Weights_CPU[_i*(FILTER_DIMENSION*FILTER_DIMENSION+1)];
 	
 		_k++;
 		if (_k == LAYER2_DIMENSION) {
@@ -102,7 +102,7 @@ void Testbench::TBStore(){
 				printf("tb: layer2 -> filter%d:\n",idx);
 				for (x = 0; x < LAYER2_DIMENSION; x++) {
 					for (y = 0; y < LAYER2_DIMENSION; y++) {
-						printf("%.2f ",Layer2[idx].ofmap[x][y]);
+						printf("%d ",Layer2[idx].ofmap[x][y]);
 						log << Layer2[idx].ofmap[x][y] << " ";
 					}
 					printf("\n");
@@ -114,7 +114,6 @@ void Testbench::TBStore(){
 			log.close();
 			printf("tb: end of simulation!\n\n");
 			_end_of_simulation = 1;
-			//abort();
 		}		
 	}
 }

@@ -23,13 +23,20 @@
 #define __TESTBENCH_H
 
 // Parameters
-#define NUMBER_OF_FILTERS 6
+#define SHIFT 100000
 #define STRIDE 2
+#define NUMBER_OF_LAYERS 5
+#define LAYER2_NUMBER_OF_FILTERS 6
+#define LAYER3_NUMBER_OF_FILTERS 50
+#define LAYER4_NUMBER_OF_FILTERS 50
 
 // Matrix dimensions
 #define IMAGE_DIMENSION 29
 #define FILTER_DIMENSION 5
 #define LAYER2_DIMENSION 13
+#define LAYER3_DIMENSION 5
+#define LAYER4_DIMENSION 100
+#define LAYER5_DIMENSION 10
 
 //std API
 #include <iostream>
@@ -62,24 +69,34 @@ private:
 	int _a_buffer[N][N];
     int _b_buffer[N][N];
 	
-	// Software buffer
-    typedef struct {
-		int  ofmap[LAYER2_DIMENSION][LAYER2_DIMENSION];
-	} Layer2OutputFeatureMap;
-	Layer2OutputFeatureMap Layer2[NUMBER_OF_FILTERS];   
+	int Layer2_Output[LAYER2_NUMBER_OF_FILTERS * LAYER2_DIMENSION * LAYER2_DIMENSION];
+	int Layer3_Output[LAYER3_NUMBER_OF_FILTERS * LAYER3_DIMENSION * LAYER3_DIMENSION];
+	int Layer4_Output[LAYER4_DIMENSION];
 	
-	// Output log generation
-	ofstream log;		
+	float Layer4_Input[LAYER3_NUMBER_OF_FILTERS * LAYER3_DIMENSION * LAYER3_DIMENSION];
+	float Layer5_Input[LAYER4_DIMENSION];
 	
+	float Layer5_Output[LAYER5_DIMENSION];
+		
 	// Convolution index
 	int _i,_j,_k;
+	int _vet_idx;
 	
 	// Testbench control
+	int _parallel_control;
+	int _end_of_layer2;
+	int _end_of_layer3;
 	int _end_of_simulation;
 	
 	// Testbench functions
 	void TBInit();
 	void TBStore();
+	void ClearIdx();
+	void idxInc(int layer_dimension_w, int layer_dimension_h);
+	void calculateLayer5(float* Layer4_Neurons_CPU, short* Layer4_Weights_CPU, float* Layer5_Neurons_CPU);
+	
+	// Neural network functions
+	void Conv(int weights[][FILTER_DIMENSION], int feature_map[][FILTER_DIMENSION]);
 	
 public: 
 	Testbench(string name);

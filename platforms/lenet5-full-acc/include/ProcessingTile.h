@@ -19,77 +19,62 @@
  * You should have received a copy of the GNU General Public License along
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA. **/
-#ifndef __TESTBENCH_H
-#define __TESTBENCH_H
+#ifndef __ProcessingTile_H
+#define __ProcessingTile_H
 
-// Parameters
-#define NUMBER_OF_FILTERS 6
-#define STRIDE 2
-
-// Matrix dimensions
-#define IMAGE_DIMENSION 29
-#define FILTER_DIMENSION 5
-#define LAYER2_DIMENSION 13
+#define NFILTER 5
 
 //std API
 #include <iostream>
-#include <math.h>
 
 //model API
 #include <UMemory.h>
 #include <USignal.h>
-#include <TSystolicArray.h>
-
-// Macros
-#define SIGMOID(x) (1.7159*tanh(0.66666667*x))
+#include <Testbench.h>
 
 /**
- * @class Testbench
+ * @class ProcessingTile
  * @author Leonardo Rezende
  * @date 01/04/20
- * @file Testbench.h
+ * @file ProcessingTile.h
  * @brief This class models an entire processing element that contains
  * RAM memory, DMA for the SIMD vector unit,  HFRiscV core
  */
-class Testbench: public TimedModel{
+class ProcessingTile{
 
 private:
+
 	///@{ Main components of the system.
 	/// the systolic array
-	TSystolicArray* _array; 
+	Testbench* _tb; 
 	
 	// Internal buffers
 	int _a_buffer[N][N];
     int _b_buffer[N][N];
 	
-	// Software buffer
-    typedef struct {
-		int  ofmap[LAYER2_DIMENSION][LAYER2_DIMENSION];
-	} Layer2OutputFeatureMap;
-	Layer2OutputFeatureMap Layer2[NUMBER_OF_FILTERS];   
-	
-	// Output log generation
-	ofstream log;		
-	
-	// Convolution index
-	int _i,_j,_k;
-	
-	// Testbench control
-	int _end_of_simulation;
-	
-	// Testbench functions
-	void TBInit();
-	void TBStore();
-	
+	//hosttime magic wire
+	uint32_t _shosttime;
+	USignal<uint32_t>* _signal_hosttime;
+		
 public: 
-	Testbench(string name);
-	~Testbench();
-
-	std::string GetName();
-	int GetEndOfSimulation();
+	ProcessingTile();
+	~ProcessingTile();
 	
+	/**
+	 * @brief Get current signal for systime signal
+	 * @return A pointer to the instance of signal
+	 */
+	USignal<uint32_t>* GetSignalHostTime();
+		
+	// Getters
+	Testbench* GetTestbench();
+	int GetTbEndOfSimulation();
+	std::string GetName();
+	
+	// Others
 	void Reset();
-	SimulationTime Run();
+	std::string ToString();
 };
 
-#endif /* __TESTBENCH_H */
+
+#endif /* __ProcessingTile_H */

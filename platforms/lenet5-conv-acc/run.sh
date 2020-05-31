@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo "" > output_log.txt
+
 cd ../../
 bin/lenet5-conv-acc.exe
 cd -
