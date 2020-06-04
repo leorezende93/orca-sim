@@ -15,6 +15,7 @@ GLOBAL_SETTINGS := -Wall -Wextra -Werror -g -std=c++17 -O3 -march=native -mtune=
 # based on the HF-RiscV processor and (ii) a NoC-based 
 # mesh-topologic manycore that uses the same processor core. 
 # PLATFORM := (orca-dma | single-core)
+#PLATFORM      := lenet5-full-acc
 PLATFORM      := lenet5-conv-acc
 #PLATFORM      := systolic-array
 #PLATFORM      := single-core-nn

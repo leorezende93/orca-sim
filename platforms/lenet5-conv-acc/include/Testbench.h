@@ -80,6 +80,7 @@ private:
 	// Testbench functions
 	void TBInit();
 	void TBStore();
+	void Conv2d(short weights[], short ifmap[], int filter_h, int filter_w, int ifmap_dimension, int stride_w, int stride_h, int channel, int ofmap_h, int ofmap_w);
 	
 public: 
 	Testbench(string name);

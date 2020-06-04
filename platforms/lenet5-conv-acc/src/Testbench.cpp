@@ -65,17 +65,20 @@ int Testbench::GetEndOfSimulation(){
 	return _end_of_simulation;
 }
 
-void Testbench::TBInit(){
+void Testbench::Conv2d(short weights[], short ifmap[], int filter_h, int filter_w, int ifmap_dimension, int stride_w, int stride_h, int channel, int ofmap_h, int ofmap_w) {
 	int m,n;
-	
+	for (m = 0; m < filter_h; m++){
+		for (n = 0; n < filter_w; n++){
+				_array->SetABuffer(m,n,weights[(filter_h*filter_w+1)*channel + filter_h*m + n + 1]);
+				_array->SetBBuffer(m,n,ifmap[ifmap_dimension*(m+stride_w*ofmap_h) + n + stride_h*ofmap_w]);
+		}
+	}	
+	_array->SetInit(1);
+}	
+
+void Testbench::TBInit(){
 	if (_i != NUMBER_OF_FILTERS && _array->GetEOP() == 0) {
-			for (m = 0; m < FILTER_DIMENSION; m++){
-				for (n = 0; n < FILTER_DIMENSION; n++){
-					_array->SetABuffer(m,n,Layer1_Weights_CPU[(FILTER_DIMENSION*FILTER_DIMENSION+1)*_i + FILTER_DIMENSION*m + n + 1]);
-					_array->SetBBuffer(m,n,data0[IMAGE_DIMENSION*(m+STRIDE*_j) + n + STRIDE*_k]);
-				}
-			}	
-			_array->SetInit(1);
+			Conv2d(Layer1_Weights_CPU,data0,FILTER_DIMENSION,FILTER_DIMENSION,IMAGE_DIMENSION,STRIDE,STRIDE,_i,_j,_k);
 		}
 	}
 
