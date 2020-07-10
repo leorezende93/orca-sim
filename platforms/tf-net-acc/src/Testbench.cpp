@@ -114,6 +114,7 @@ void Testbench::printLayer(int n_filter, int h, int w, int64_t map[]) {
 void Testbench::Conv2d(int32_t weight[], int64_t ifmap[], int n_channel, int filter_h, int filter_w, int stride_h, int stride_w, int input_h, int input_w, int input_c) {
 	int m,n;
 	
+	_wait_eop = 1;
 	if (_i != n_channel) {
 		
 		// Calculating output dimension
@@ -194,22 +195,18 @@ int Testbench::Dense(int32_t weight[], int64_t ifmap[], int32_t bias[], int64_t 
 
 void Testbench::TBInit(){
 	if (_array->GetEOP() == 0 && _wait_eop == 0 && _end_of_layer1 == 0) {
-		_wait_eop = 1;
 		Conv2d(Layer1_Weights,Input[_cont_testcases],16,3,3,2,2,28,28,1);
 	}
 	
 	else if (_array->GetEOP() == 0 && _wait_eop == 0 && _end_of_layer1 == 1 && _end_of_layer2 == 0) {
-		_wait_eop = 1;
 		Conv2d(Layer2_Weights,Layer2_Input,8,3,3,1,1,13,13,16);
 	}
 	
 	else if (_array->GetEOP() == 0 && _wait_eop == 0 && _end_of_layer1 == 1 && _end_of_layer2 == 1 && _end_of_layer3 == 0) {
-		_wait_eop = 1;
 		Conv2d(Layer3_Weights,Layer3_Input,3,3,3,2,2,11,11,8);
 	}
 	
 	else if (_array->GetEOP() == 0 && _wait_eop == 0 && _end_of_layer1 == 1 && _end_of_layer2 == 1 && _end_of_layer3 == 1 && _end_of_layer4 == 0) {
-		_wait_eop = 1;
 		Conv2d(Layer4_Weights,Layer4_Input,1,3,3,1,1,5,5,3);
 	}
 }
