@@ -17,7 +17,8 @@ GLOBAL_SETTINGS := -Wall -Wextra -Werror -g -std=c++17 -O3 -march=native -mtune=
 # PLATFORM := (orca-dma | single-core)
 #PLATFORM      := lenet5-full-acc
 #PLATFORM      := lenet5-conv-acc
-PLATFORM      := tf-net-acc
+#PLATFORM      := tf-net-acc-32b
+PLATFORM      := tf-net-acc-16b
 #PLATFORM      := systolic-array
 #PLATFORM      := single-core-nn
 
