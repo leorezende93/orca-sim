@@ -59,10 +59,9 @@ private:
     int _output_h, _output_w;
 	
 	// Convolution buffer
-	int32_t Layer2_Input[16 * 13 * 13];
-	int32_t Layer3_Input[11 * 11 * 8];
-	int32_t Layer4_Input[5 * 5 * 3];
-	int32_t Dense_Input[3 * 3 * 1];
+	int32_t Layer2_Input[8 * 13 * 13];
+	int32_t Layer3_Input[11 * 11 * 3];
+	int32_t Dense_Input[5 * 5 * 1];
 	int32_t Output[10];
 	
 	// Convolution index
@@ -80,7 +79,6 @@ private:
 	int _end_of_layer1;
 	int _end_of_layer2;
 	int _end_of_layer3;
-	int _end_of_layer4;
 	int _end_of_simulation;
 	
 	// Testcases control

@@ -28,8 +28,8 @@
 #include <Testbench.h>
 
 // PPA informations
-//#include <PPA28nm.h>
-#include <PPA65nm.h>
+#include <PPA28nm.h>
+//#include <PPA65nm.h>
 
 
 /** 
@@ -55,7 +55,6 @@ Testbench::Testbench(string name) : TimedModel(name) {
 	_end_of_layer1 = 0;
 	_end_of_layer2 = 0;
 	_end_of_layer3 = 0;
-	_end_of_layer4 = 0;
 	_end_of_simulation = 0;
 	
 	// Testcase control
@@ -204,41 +203,34 @@ int Testbench::Dense(int16_t weight[], int32_t ifmap[], int16_t bias[], int32_t 
 
 void Testbench::TBInit(){
 	if (_array->GetEOP() == 0 && _wait_eop == 0 && _end_of_layer1 == 0) {
-		Conv2d(Layer1_Weights,Input[_cont_testcases],16,3,3,2,2,28,28,1);
+		Conv2d(Layer1_Weights,Input[_cont_testcases],8,3,3,2,2,28,28,1);
 	}
 	
 	else if (_array->GetEOP() == 0 && _wait_eop == 0 && _end_of_layer1 == 1 && _end_of_layer2 == 0) {
-		Conv2d(Layer2_Weights,Layer2_Input,8,3,3,1,1,13,13,16);
+		Conv2d(Layer2_Weights,Layer2_Input,3,3,3,1,1,13,13,8);
 	}
 	
 	else if (_array->GetEOP() == 0 && _wait_eop == 0 && _end_of_layer1 == 1 && _end_of_layer2 == 1 && _end_of_layer3 == 0) {
-		Conv2d(Layer3_Weights,Layer3_Input,3,3,3,2,2,11,11,8);
+		Conv2d(Layer3_Weights,Layer3_Input,1,3,3,2,2,11,11,3);
 	}
 	
-	else if (_array->GetEOP() == 0 && _wait_eop == 0 && _end_of_layer1 == 1 && _end_of_layer2 == 1 && _end_of_layer3 == 1 && _end_of_layer4 == 0) {
-		Conv2d(Layer4_Weights,Layer4_Input,1,3,3,1,1,5,5,3);
-	}
 }
 
 void Testbench::TBStore(){
 	int predict = 0;
 	
 	if(_array->GetEOP() == 1 && _end_of_layer1 == 0){
-		StoreOfmap(Layer2_Input,Layer1_Bias,&_end_of_layer1,1,16);
+		StoreOfmap(Layer2_Input,Layer1_Bias,&_end_of_layer1,1,8);
 	}
 	
 	else if(_array->GetEOP() == 1 && _end_of_layer1 == 1 && _end_of_layer2 == 0){	
-		StoreOfmap(Layer3_Input,Layer2_Bias,&_end_of_layer2,16,8);		
+		StoreOfmap(Layer3_Input,Layer2_Bias,&_end_of_layer2,8,3);		
 	}
 	
 	else if(_array->GetEOP() == 1 && _end_of_layer1 == 1 && _end_of_layer2 == 1 && _end_of_layer3 == 0){	
-		StoreOfmap(Layer4_Input,Layer3_Bias,&_end_of_layer3,8,3);	
-	}	
-	
-	else if(_array->GetEOP() == 1 && _end_of_layer1 == 1 && _end_of_layer2 == 1 && _end_of_layer3 == 1 && _end_of_layer4 == 0){	
-		StoreOfmap(Dense_Input,Layer4_Bias,&_end_of_layer4,3,1);
-		if (_end_of_layer4 == 1) {
-			predict = Dense(Dense_Weights,Dense_Input,Dense_Bias,Output,10,3,3,1);
+		StoreOfmap(Dense_Input,Layer3_Bias,&_end_of_layer3,3,1);
+		if (_end_of_layer3 == 1) {
+			predict = Dense(Dense_Weights,Dense_Input,Dense_Bias,Output,10,5,5,1);
 			
 			if(predict == Label[_cont_testcases])
 				_cont_predict++;
@@ -290,7 +282,6 @@ void Testbench::TBStore(){
 				_end_of_layer1 = 0;
 				_end_of_layer2 = 0;
 				_end_of_layer3 = 0;
-				_end_of_layer4 = 0;
 			}
 		}		
 	}	

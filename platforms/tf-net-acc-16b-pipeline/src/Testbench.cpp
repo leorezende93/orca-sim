@@ -140,6 +140,7 @@ void Testbench::Conv2d(int16_t weight[], int32_t ifmap[], int n_channel, int fil
 					_array->SetBBuffer(m,n,ifmap[input_w*(m+stride_w*_j)+n+(stride_h*_k)+(input_w*input_h*_c)]);
 			}
 		}	
+		
 		_array->SetInit(1);
 	}
 }

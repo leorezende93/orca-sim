@@ -18,7 +18,11 @@ GLOBAL_SETTINGS := -Wall -Wextra -Werror -g -std=c++17 -O3 -march=native -mtune=
 #PLATFORM      := lenet5-full-acc
 #PLATFORM      := lenet5-conv-acc
 #PLATFORM      := tf-net-acc-32b
-PLATFORM      := tf-net-acc-16b
+#PLATFORM      := tf-net-acc-16b-2layers
+#PLATFORM      := tf-net-acc-16b-3layers
+#PLATFORM      := tf-net-acc-16b
+#PLATFORM      := tf-net-acc-16b-5layers
+PLATFORM      := tf-net-acc-16b-pipeline
 #PLATFORM      := systolic-array
 #PLATFORM      := single-core-nn
 
